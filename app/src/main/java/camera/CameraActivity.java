@@ -17,10 +17,12 @@
 package camera;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.widget.Button;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.fragment.app.FragmentActivity;
@@ -31,43 +33,44 @@ import com.androidexperiments.shadercam.fragments.VideoFragment;
 import com.androidexperiments.shadercam.gl.VideoRenderer;
 import com.androidexperiments.shadercam.utils.ShaderUtils;
 import com.example.feedbackcam.R;
+import com.google.android.material.button.MaterialButton;
 import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
 import gl.ShaderRenderer;
 
-public class CameraActivity extends FragmentActivity implements PermissionsHelper.PermissionsListener {
+public class CameraActivity extends FragmentActivity implements PermissionsHelper.PermissionsListener, ShaderRenderer.OnButtonPressedListener, View.OnClickListener {
 
     private static final String TAG = CameraActivity.class.getSimpleName();
     private static final String TAG_CAMERA_FRAGMENT = "tag_camera_frag";
     private static final String TEST_VIDEO_FILE_NAME = "test_video.mp4";
     protected VideoRenderer mVideoRenderer;
-    @BindView(R.id.texture_view)
     RecordableSurfaceView mRecordableSurfaceView;
-    @BindView(R.id.btn_record)
-    Button mRecordBtn;
+    MaterialButton mRecordBtn;
+    ImageView swapButton;
+    boolean savePicture = false;
     private VideoFragment mVideoFragment;
     private PermissionsHelper mPermissionsHelper;
-    private boolean mPermissionsSatisfied = false;
+    private boolean mPermissionsSatisfied;
     private File mOutputFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mVideoRenderer = new ShaderRenderer(this);
         setContentView(R.layout.camera_view);
-        ButterKnife.bind(this);
-
+        mVideoRenderer = new ShaderRenderer(this, this::onButtonPressed);
+        mRecordableSurfaceView = new RecordableSurfaceView(this);
+        mRecordableSurfaceView = findViewById(R.id.texture_view);
+        mRecordBtn = findViewById(R.id.btn_record);
+        swapButton = findViewById(R.id.btn_swap_camera);
+        swapButton.setOnClickListener(this);
+        mRecordBtn.setOnClickListener(this);
         if (PermissionsHelper.isMorHigher())
             setupPermissions();
     }
-
 
     private void setupPermissions() {
         mPermissionsHelper = PermissionsHelper.attach(this);
@@ -81,7 +84,7 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
     private void setupVideoFragment(VideoRenderer renderer) {
         mVideoFragment = VideoFragment.getInstance();
         //pass in a reference to the RecordableSurfaceView - this is important
-        mRecordableSurfaceView.setRenderMode(RecordableSurfaceView.RENDERMODE_CONTINUOUSLY);
+        //mRecordableSurfaceView.setRenderMode(RecordableSurfaceView.RENDERMODE_CONTINUOUSLY);
         mVideoFragment.setRecordableSurfaceView(mRecordableSurfaceView);
         //Connect your renderer
         mVideoFragment.setVideoRenderer(renderer);
@@ -91,11 +94,10 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
         transaction.commit();
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void setupInteraction() {
         mRecordableSurfaceView.setOnTouchListener((v, event) -> {
-            Log.i("topo", "eccoci " + mVideoFragment.getVideoRenderer().getClass());
             if (mVideoFragment.getVideoRenderer() instanceof ShaderRenderer) {
-                Log.i("topo", "eccoci quiii :D");
                 ((ShaderRenderer) mVideoFragment.getVideoRenderer())
                         .setTouchPoint(event.getRawX(), event.getRawY());
                 return true;
@@ -140,11 +142,6 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
         mRecordableSurfaceView.pause();
     }
 
-    @OnClick(R.id.btn_swap_camera)
-    public void onClickSwapCamera() {
-        mVideoFragment.swapCamera();
-    }
-
     private File getVideoFile() {
         return new File(Environment.getExternalStorageDirectory(), TEST_VIDEO_FILE_NAME);
     }
@@ -168,5 +165,24 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
         mPermissionsSatisfied = false;
         Toast.makeText(this, "shadercam needs all permissions to function, please try again.", Toast.LENGTH_LONG).show();
         this.finish();
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.btn_swap_camera) {
+            mVideoFragment.swapCamera();
+        }
+        if (v.getId() == R.id.btn_record) {
+            savePicture = true;
+        }
+    }
+
+    @Override
+    public boolean onButtonPressed() {
+        return savePicture;
+    }
+
+    public void setSavePicture(boolean savePicture) {
+        this.savePicture = savePicture;
     }
 }

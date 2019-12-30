@@ -2,39 +2,42 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="camera.CameraActivity">
 
     <!--<com.androidexperiments.shadercam.view.SquareTextureView-->
+
     <com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView
         android:id="@+id/texture_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_record"
-        android:layout_width="125dp"
-        android:layout_height="60dp"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="20dp"
-        android:text="Record"/>
-
-    <Button
-        android:id="@+id/btn_swap_camera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_margin="10dp"
-        android:text="swap"/>
+        app:icon="@drawable/ic_camera_24px"
+        app:iconSize="50dp"
+        app:iconPadding="0dp"
+        app:iconGravity="textStart"
+        app:iconTint="@color/purple"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="20dp"
+        app:cornerRadius="50dp"/>
 
-    <SeekBar
-        android:id="@+id/seek_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        android:layout_above="@id/btn_record"
-        android:progress="50"
-        android:max="100"
-        android:padding="10dp"/>
+    <ImageView
+        android:id="@+id/btn_swap_camera"
+        android:layout_width="57dp"
+        android:layout_height="47dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:clickable="true"
+        android:src="@drawable/ic_flip_camera_android_24px" />
 
 </RelativeLayout>
