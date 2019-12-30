@@ -13,9 +13,7 @@ public class ShaderRenderer extends VideoRenderer {
     private float offsetB = 0.5f;
 
     public ShaderRenderer(Context context) {
-        super(context, "touchcolor.frag", "touchcolor.vert");
-        //setSurfaceTexture();
-
+        super(context, "touchcolor.frag.glsl", "touchcolor.vert.glsl");
     }
 
     @Override

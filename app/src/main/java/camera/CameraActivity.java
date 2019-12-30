@@ -20,8 +20,6 @@ import android.Manifest;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -33,7 +31,6 @@ import com.androidexperiments.shadercam.fragments.VideoFragment;
 import com.androidexperiments.shadercam.gl.VideoRenderer;
 import com.androidexperiments.shadercam.utils.ShaderUtils;
 import com.example.feedbackcam.R;
-import gl.ExampleVideoRenderer;
 import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView;
 
 import java.io.File;
@@ -43,18 +40,19 @@ import java.util.Arrays;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import gl.ShaderRenderer;
 
 public class CameraActivity extends FragmentActivity implements PermissionsHelper.PermissionsListener {
 
     private static final String TAG = CameraActivity.class.getSimpleName();
     private static final String TAG_CAMERA_FRAGMENT = "tag_camera_frag";
     private static final String TEST_VIDEO_FILE_NAME = "test_video.mp4";
+    protected VideoRenderer mVideoRenderer;
     @BindView(R.id.texture_view)
     RecordableSurfaceView mRecordableSurfaceView;
     @BindView(R.id.btn_record)
     Button mRecordBtn;
     private VideoFragment mVideoFragment;
-    protected VideoRenderer mVideoRenderer;
     private PermissionsHelper mPermissionsHelper;
     private boolean mPermissionsSatisfied = false;
     private File mOutputFile;
@@ -62,7 +60,7 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mVideoRenderer = new ExampleVideoRenderer(this);
+        mVideoRenderer = new ShaderRenderer(this);
         setContentView(R.layout.camera_view);
         ButterKnife.bind(this);
 
@@ -96,9 +94,9 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
     private void setupInteraction() {
         mRecordableSurfaceView.setOnTouchListener((v, event) -> {
             Log.i("topo", "eccoci " + mVideoFragment.getVideoRenderer().getClass());
-            if (mVideoFragment.getVideoRenderer() instanceof ExampleVideoRenderer) {
+            if (mVideoFragment.getVideoRenderer() instanceof ShaderRenderer) {
                 Log.i("topo", "eccoci quiii :D");
-                ((ExampleVideoRenderer) mVideoFragment.getVideoRenderer())
+                ((ShaderRenderer) mVideoFragment.getVideoRenderer())
                         .setTouchPoint(event.getRawX(), event.getRawY());
                 return true;
             }
@@ -116,9 +114,7 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
         ShaderUtils.goFullscreen(this.getWindow());
 
         if (PermissionsHelper.isMorHigher()) {
-            if (!mPermissionsHelper.checkPermissions()) {
-                return;
-            } else {
+            if (mPermissionsHelper.checkPermissions()) {
                 if (mVideoRenderer == null) {
                     mVideoRenderer = new VideoRenderer(this);
                 }
