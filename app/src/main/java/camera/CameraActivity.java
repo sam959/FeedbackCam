@@ -17,14 +17,16 @@
 package camera;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
+import androidx.appcompat.widget.Toolbar;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -33,7 +35,7 @@ import com.androidexperiments.shadercam.fragments.VideoFragment;
 import com.androidexperiments.shadercam.gl.VideoRenderer;
 import com.androidexperiments.shadercam.utils.ShaderUtils;
 import com.example.feedbackcam.R;
-import com.google.android.material.button.MaterialButton;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView;
 
 import java.io.File;
@@ -42,16 +44,18 @@ import java.util.Arrays;
 
 import gl.ShaderRenderer;
 
-public class CameraActivity extends FragmentActivity implements PermissionsHelper.PermissionsListener, ShaderRenderer.OnButtonPressedListener, View.OnClickListener {
+public class CameraActivity extends FragmentActivity implements PermissionsHelper.PermissionsListener, ShaderRenderer.OnButtonPressedListener, View.OnClickListener, SeekBar.OnSeekBarChangeListener {
 
     private static final String TAG = CameraActivity.class.getSimpleName();
     private static final String TAG_CAMERA_FRAGMENT = "tag_camera_frag";
     private static final String TEST_VIDEO_FILE_NAME = "test_video.mp4";
     protected VideoRenderer mVideoRenderer;
-    RecordableSurfaceView mRecordableSurfaceView;
-    MaterialButton mRecordBtn;
-    ImageView swapButton;
     boolean savePicture = false;
+    private RecordableSurfaceView mRecordableSurfaceView;
+    private FloatingActionButton takePictureBtn;
+    private ImageView swapButton;
+    private SeekBar seekBar;
+    private DrawerLayout drawerMenu;
     private VideoFragment mVideoFragment;
     private PermissionsHelper mPermissionsHelper;
     private boolean mPermissionsSatisfied;
@@ -62,14 +66,32 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.camera_view);
         mVideoRenderer = new ShaderRenderer(this, this::onButtonPressed);
-        mRecordableSurfaceView = new RecordableSurfaceView(this);
-        mRecordableSurfaceView = findViewById(R.id.texture_view);
-        mRecordBtn = findViewById(R.id.btn_record);
-        swapButton = findViewById(R.id.btn_swap_camera);
-        swapButton.setOnClickListener(this);
-        mRecordBtn.setOnClickListener(this);
+        setUpUIComponents();
         if (PermissionsHelper.isMorHigher())
             setupPermissions();
+    }
+
+    private void setUpUIComponents() {
+        mRecordableSurfaceView = new RecordableSurfaceView(this);
+        mRecordableSurfaceView = findViewById(R.id.texture_view);
+        takePictureBtn = findViewById(R.id.btn_take_picture);
+        swapButton = findViewById(R.id.btn_swap_camera);
+        swapButton.setOnClickListener(this);
+        takePictureBtn.setOnClickListener(this);
+        seekBar = findViewById(R.id.slider);
+        seekBar.setOnSeekBarChangeListener(this);
+
+        Toolbar toolbar = findViewById(R.id.toolbar_main);
+        /*
+        setSupportActionBar(toolbar);
+        drawer = findViewById(R.id.drawer_layout);
+
+        toggle = ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
+        drawer.addDrawerListener(toggle)
+        supportActionBar ?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar ?.setHomeButtonEnabled(true)
+
+         */
     }
 
     private void setupPermissions() {
@@ -83,10 +105,8 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
 
     private void setupVideoFragment(VideoRenderer renderer) {
         mVideoFragment = VideoFragment.getInstance();
-        //pass in a reference to the RecordableSurfaceView - this is important
         //mRecordableSurfaceView.setRenderMode(RecordableSurfaceView.RENDERMODE_CONTINUOUSLY);
         mVideoFragment.setRecordableSurfaceView(mRecordableSurfaceView);
-        //Connect your renderer
         mVideoFragment.setVideoRenderer(renderer);
         mVideoFragment.setCameraToUse(VideoFragment.CAMERA_PRIMARY);
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
@@ -94,27 +114,11 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
         transaction.commit();
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    private void setupInteraction() {
-        mRecordableSurfaceView.setOnTouchListener((v, event) -> {
-            if (mVideoFragment.getVideoRenderer() instanceof ShaderRenderer) {
-                ((ShaderRenderer) mVideoFragment.getVideoRenderer())
-                        .setTouchPoint(event.getRawX(), event.getRawY());
-                return true;
-            }
-            return false;
-        });
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
-
         Log.d(TAG, "onResume()");
-        setupInteraction();
-
         ShaderUtils.goFullscreen(this.getWindow());
-
         if (PermissionsHelper.isMorHigher()) {
             if (mPermissionsHelper.checkPermissions()) {
                 if (mVideoRenderer == null) {
@@ -172,7 +176,7 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
         if (v.getId() == R.id.btn_swap_camera) {
             mVideoFragment.swapCamera();
         }
-        if (v.getId() == R.id.btn_record) {
+        if (v.getId() == R.id.btn_take_picture) {
             savePicture = true;
         }
     }
@@ -184,5 +188,22 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
 
     public void setSavePicture(boolean savePicture) {
         this.savePicture = savePicture;
+    }
+
+    // SEEKBAR
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        ((ShaderRenderer) mVideoFragment.getVideoRenderer()).getSeekbarProgressValue(seekBar.getProgress());
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
     }
 }

@@ -18,7 +18,6 @@ import java.nio.ByteOrder;
 
 import camera.CameraActivity;
 
-
 public class ShaderRenderer extends VideoRenderer {
 
     private static final File FILES_DIR = Environment.getExternalStorageDirectory();
@@ -27,16 +26,16 @@ public class ShaderRenderer extends VideoRenderer {
     private Bitmap bufferBitmap;
     private Bitmap tempBitmap;
 
-    int mBufferTexId = -1;
-    boolean firstFrame = true;
+    private int mBufferTexId = -1;
+    private boolean firstFrame = true;
     private int frameCount = 0;
     private float threshold = 0.5f;
     private float opacity = 0.5f;
     private float offsetB = 0.5f;
+    private float effectAmount = 0;
     private Context context;
     private boolean updateIsNeeded;
-    Matrix matrix = new Matrix();
-
+    private Matrix matrix = new Matrix();
 
     public ShaderRenderer(Context context, ShaderRenderer.OnButtonPressedListener listener) {
         super(context, "lumakey.frag.glsl", "lumakey.vert.glsl");
@@ -58,14 +57,13 @@ public class ShaderRenderer extends VideoRenderer {
 
         int thresholdLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "threshold");
         int opacityGLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "opacity");
-        GLES20.glUniform1f(thresholdLoc, threshold);
+        GLES20.glUniform1f(thresholdLoc, effectAmount);
         GLES20.glUniform1f(opacityGLoc, opacity);
     }
 
-    public void setTouchPoint(float rawX, float rawY) {
-        threshold = rawX / mSurfaceWidth;
-        opacity = rawY / mSurfaceHeight;
-        offsetB = threshold / opacity;
+    public void getSeekbarProgressValue(int seekbarValue){
+         effectAmount = ((float)seekbarValue) / 100;
+         Log.i("seekbar", "effectamout" + effectAmount);
     }
 
     @Override
@@ -88,10 +86,9 @@ public class ShaderRenderer extends VideoRenderer {
         tempBitmap = Bitmap.createBitmap(this.mSurfaceWidth, this.mSurfaceHeight, Bitmap.Config.ARGB_8888);
         tempBitmap.copyPixelsFromBuffer(mPixelBuf);
         updateBufferTexture(tempBitmap);
-
     }
 
-    public void updateBufferTexture(Bitmap tempBitmap){
+    private void updateBufferTexture(Bitmap tempBitmap){
         bufferBitmap = tempBitmap;
         updateIsNeeded = true;
     }
@@ -105,12 +102,10 @@ public class ShaderRenderer extends VideoRenderer {
                 //first run and awful way to hope this fails
                 Log.e("FROM setExtraTextures()", "ILLEGAL", e);
             }
-
             updateIsNeeded = false;
         }
         super.setExtraTextures();
     }
-
 
     private void onFirstFrame(){
         if(firstFrame == true){
@@ -119,9 +114,7 @@ public class ShaderRenderer extends VideoRenderer {
                 mBufferTexId = addTexture(bufferBitmap, "bufferTexture");
             }
             firstFrame = false;
-
         }
-
     }
 
     private void saveFrame(String filename) throws IOException {
@@ -137,11 +130,7 @@ public class ShaderRenderer extends VideoRenderer {
             Bitmap bitmap = Bitmap.createBitmap(this.mSurfaceWidth, this.mSurfaceHeight, Bitmap.Config.ARGB_8888);
             //mPixelBuf.rewind();
             bitmap.copyPixelsFromBuffer(mPixelBuf);
-
-
-
             Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, this.mSurfaceWidth, this.mSurfaceHeight, matrix, false);
-
             rotatedBitmap.compress(Bitmap.CompressFormat.PNG, 90, bufferedOutputStream);
             bitmap.recycle();
             rotatedBitmap.recycle();
@@ -155,7 +144,6 @@ public class ShaderRenderer extends VideoRenderer {
     @Override
     protected void deinitGLComponents() {
         mBufferTexId = -1;
-
         super.deinitGLComponents();
     }
 

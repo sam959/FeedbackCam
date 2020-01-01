@@ -1,1 +1,3 @@
-<resources></resources>
+<resources>
+    <dimen name="cat_slider_left_margin">10dp</dimen>
+</resources>
