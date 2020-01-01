@@ -24,16 +24,25 @@ public class ShaderRenderer extends VideoRenderer {
     private static final File FILES_DIR = Environment.getExternalStorageDirectory();
     private ShaderRenderer.OnButtonPressedListener listener;
     private ByteBuffer mPixelBuf;
+    private Bitmap bufferBitmap;
+    private Bitmap tempBitmap;
+
+    int mBufferTexId = -1;
+    boolean firstFrame = true;
     private int frameCount = 0;
-    private float offsetR = 0.5f;
-    private float offsetG = 0.5f;
+    private float threshold = 0.5f;
+    private float opacity = 0.5f;
     private float offsetB = 0.5f;
     private Context context;
+    private boolean updateIsNeeded;
+    Matrix matrix = new Matrix();
+
 
     public ShaderRenderer(Context context, ShaderRenderer.OnButtonPressedListener listener) {
-        super(context, "touchcolor.frag.glsl", "touchcolor.vert.glsl");
+        super(context, "lumakey.frag.glsl", "lumakey.vert.glsl");
         this.context = context;
         this.listener = listener;
+        matrix.postScale(1, -1, this.mSurfaceWidth / 2, this.mSurfaceHeight / 2);
     }
 
     @Override
@@ -47,23 +56,22 @@ public class ShaderRenderer extends VideoRenderer {
     protected void setUniformsAndAttribs() {
         super.setUniformsAndAttribs();
 
-        int offsetRLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "offsetR");
-        int offsetGLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "offsetG");
-        int offsetBLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "offsetB");
-        GLES20.glUniform1f(offsetRLoc, offsetR);
-        GLES20.glUniform1f(offsetGLoc, offsetG);
-        GLES20.glUniform1f(offsetBLoc, offsetB);
+        int thresholdLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "threshold");
+        int opacityGLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "opacity");
+        GLES20.glUniform1f(thresholdLoc, threshold);
+        GLES20.glUniform1f(opacityGLoc, opacity);
     }
 
     public void setTouchPoint(float rawX, float rawY) {
-        offsetR = rawX / mSurfaceWidth;
-        offsetG = rawY / mSurfaceHeight;
-        offsetB = offsetR / offsetG;
+        threshold = rawX / mSurfaceWidth;
+        opacity = rawY / mSurfaceHeight;
+        offsetB = threshold / opacity;
     }
 
     @Override
     public void onDrawFrame() {
         super.onDrawFrame();
+        onFirstFrame();
         if (listener.onButtonPressed()) {
             ((CameraActivity) context).setSavePicture(false);
             try {
@@ -74,22 +82,64 @@ public class ShaderRenderer extends VideoRenderer {
                 e.printStackTrace();
             }
         }
+        mPixelBuf.rewind();
+        GLES20.glReadPixels(0, 0, this.mSurfaceWidth, this.mSurfaceHeight, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE,
+                mPixelBuf);
+        tempBitmap = Bitmap.createBitmap(this.mSurfaceWidth, this.mSurfaceHeight, Bitmap.Config.ARGB_8888);
+        tempBitmap.copyPixelsFromBuffer(mPixelBuf);
+        updateBufferTexture(tempBitmap);
+
+    }
+
+    public void updateBufferTexture(Bitmap tempBitmap){
+        bufferBitmap = tempBitmap;
+        updateIsNeeded = true;
+    }
+
+    @Override
+    protected void setExtraTextures() {
+        if (updateIsNeeded) {
+            try {
+                updateTexture(mBufferTexId, bufferBitmap);
+            } catch (IllegalArgumentException e) {
+                //first run and awful way to hope this fails
+                Log.e("FROM setExtraTextures()", "ILLEGAL", e);
+            }
+
+            updateIsNeeded = false;
+        }
+        super.setExtraTextures();
+    }
+
+
+    private void onFirstFrame(){
+        if(firstFrame == true){
+            bufferBitmap = Bitmap.createBitmap(mSurfaceWidth, mSurfaceHeight, Bitmap.Config.ARGB_8888);
+            if(mBufferTexId == -1) {
+                mBufferTexId = addTexture(bufferBitmap, "bufferTexture");
+            }
+            firstFrame = false;
+
+        }
+
     }
 
     private void saveFrame(String filename) throws IOException {
+
         mPixelBuf.rewind();
         GLES20.glReadPixels(0, 0, this.mSurfaceWidth, this.mSurfaceHeight, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE,
                 mPixelBuf);
 
         BufferedOutputStream bufferedOutputStream = null;
-        Matrix matrix = new Matrix();
-        matrix.postScale(1, -1, this.mSurfaceWidth / 2, this.mSurfaceHeight / 2);
 
         try {
             bufferedOutputStream = new BufferedOutputStream(new FileOutputStream(filename));
             Bitmap bitmap = Bitmap.createBitmap(this.mSurfaceWidth, this.mSurfaceHeight, Bitmap.Config.ARGB_8888);
             //mPixelBuf.rewind();
             bitmap.copyPixelsFromBuffer(mPixelBuf);
+
+
+
             Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, this.mSurfaceWidth, this.mSurfaceHeight, matrix, false);
 
             rotatedBitmap.compress(Bitmap.CompressFormat.PNG, 90, bufferedOutputStream);
@@ -100,6 +150,13 @@ public class ShaderRenderer extends VideoRenderer {
         }
         frameCount++;
         Log.v("Picture ", "Saved " + this.mSurfaceWidth + "x" + this.mSurfaceHeight + " frame as '" + filename + "'" + "DIRECTORY IS: " + FILES_DIR);
+    }
+
+    @Override
+    protected void deinitGLComponents() {
+        mBufferTexId = -1;
+
+        super.deinitGLComponents();
     }
 
     public interface OnButtonPressedListener {
