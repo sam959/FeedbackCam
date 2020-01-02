@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <group>
-        <item android:id="@+id/nav_item_one"
+        <item
+            android:id="@+id/threshold"
+            android:icon="@drawable/ic_camera_24px"
+            android:title="Threshold" />
+        <item
+            android:id="@+id/opacity"
             android:icon="@drawable/ic_camera_24px"
             android:title="Opacity" />
-        <item android:id="@+id/nav_item_two"
+        <item
+            android:id="@+id/hue"
             android:icon="@drawable/ic_camera_24px"
-            android:title="Treshold" />
-        <item android:id="@+id/nav_item_three"
-            android:icon="@drawable/ic_camera_24px"
-            android:title="Item 3" />
+            android:title="Hue" />
     </group>
-
 </menu>

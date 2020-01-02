@@ -2,4 +2,6 @@
     <string name="app_name">FeedbackCam</string>
     <string name="swap_camera">Swap</string>
     <string name="take_photo">Take Photo</string>
+    <string name="photo_saved">Photo saved!</string>
+    <string name="image_title">Photo-%02d.png</string>
 </resources>

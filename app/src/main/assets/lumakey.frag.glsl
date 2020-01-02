@@ -12,6 +12,7 @@ varying vec2 v_TexCoordinate;
 
 uniform float threshold;
 uniform float opacity;
+uniform float hue;
 
 
 
@@ -67,7 +68,7 @@ void main() {
     float isKeyOpen = step(pix.a, 0.1);
     // final mix needed to make alpha working
     vec4 color = mix(vec4(pix.rgb, 0.0),pix,pix.a);
-    color = vec4(mix(color.rgb, feedback.rgb, 1.0 - pix.a - (isKeyOpen * 0.0)),  1.0);
-    color = vec4(hueShift(color.xyz, threshold*3.0),1.0);
+    color = vec4(mix(color.rgb, feedback.rgb, 1.0 - pix.a - (isKeyOpen * newopacity)),  1.0);
+    color = vec4(hueShift(color.xyz, hue*3.0),1.0);
     gl_FragColor = color;
 }

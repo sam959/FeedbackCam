@@ -22,11 +22,10 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
-import androidx.appcompat.widget.Toolbar;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -42,7 +41,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-import gl.ShaderRenderer;
+import renderer.ShaderRenderer;
 
 public class CameraActivity extends FragmentActivity implements PermissionsHelper.PermissionsListener, ShaderRenderer.OnButtonPressedListener, View.OnClickListener, SeekBar.OnSeekBarChangeListener {
 
@@ -50,48 +49,72 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
     private static final String TAG_CAMERA_FRAGMENT = "tag_camera_frag";
     private static final String TEST_VIDEO_FILE_NAME = "test_video.mp4";
     protected VideoRenderer mVideoRenderer;
-    boolean savePicture = false;
+    private boolean savePicture = false;
     private RecordableSurfaceView mRecordableSurfaceView;
     private FloatingActionButton takePictureBtn;
+    private FloatingActionButton showMenuButton;
     private ImageView swapButton;
     private SeekBar seekBar;
-    private DrawerLayout drawerMenu;
+    private PopupMenu popup;
     private VideoFragment mVideoFragment;
     private PermissionsHelper mPermissionsHelper;
     private boolean mPermissionsSatisfied;
     private File mOutputFile;
+    private int paramSelector;
+
+    public int getParamSelector() {
+        return paramSelector;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.camera_view);
-        mVideoRenderer = new ShaderRenderer(this, this::onButtonPressed);
+        mVideoRenderer = new ShaderRenderer(this, this);
         setUpUIComponents();
         if (PermissionsHelper.isMorHigher())
             setupPermissions();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        shutdownCamera();
+        mRecordableSurfaceView.pause();
     }
 
     private void setUpUIComponents() {
         mRecordableSurfaceView = new RecordableSurfaceView(this);
         mRecordableSurfaceView = findViewById(R.id.texture_view);
         takePictureBtn = findViewById(R.id.btn_take_picture);
+        showMenuButton = findViewById(R.id.btn_menu);
         swapButton = findViewById(R.id.btn_swap_camera);
+        seekBar = findViewById(R.id.slider);
         swapButton.setOnClickListener(this);
         takePictureBtn.setOnClickListener(this);
-        seekBar = findViewById(R.id.slider);
+        showMenuButton.setOnClickListener(this);
         seekBar.setOnSeekBarChangeListener(this);
+        createPopupMenu();
+    }
 
-        Toolbar toolbar = findViewById(R.id.toolbar_main);
-        /*
-        setSupportActionBar(toolbar);
-        drawer = findViewById(R.id.drawer_layout);
-
-        toggle = ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-        drawer.addDrawerListener(toggle)
-        supportActionBar ?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar ?.setHomeButtonEnabled(true)
-
-         */
+    private void createPopupMenu() {
+        popup = new PopupMenu(this, showMenuButton);
+        popup.getMenuInflater().inflate(R.menu.activity_main_drawer, popup.getMenu());
+        popup.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.threshold:
+                    paramSelector = 1;
+                    break;
+                case R.id.opacity:
+                    paramSelector = 2;
+                    break;
+                case R.id.hue:
+                    paramSelector = 3;
+                    break;
+            }
+            seekBar.setProgress(((ShaderRenderer) mVideoRenderer).getEffectAmount(paramSelector));
+            return true;
+        });
     }
 
     private void setupPermissions() {
@@ -139,13 +162,6 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
         }
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        shutdownCamera();
-        mRecordableSurfaceView.pause();
-    }
-
     private File getVideoFile() {
         return new File(Environment.getExternalStorageDirectory(), TEST_VIDEO_FILE_NAME);
     }
@@ -179,6 +195,9 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
         if (v.getId() == R.id.btn_take_picture) {
             savePicture = true;
         }
+        if (v.getId() == R.id.btn_menu) {
+            popup.show();
+        }
     }
 
     @Override
@@ -191,7 +210,6 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
     }
 
     // SEEKBAR
-
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         ((ShaderRenderer) mVideoFragment.getVideoRenderer()).getSeekbarProgressValue(seekBar.getProgress());
