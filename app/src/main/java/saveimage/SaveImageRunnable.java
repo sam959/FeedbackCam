@@ -1,4 +1,4 @@
-package worker;
+package saveimage;
 
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
@@ -37,7 +37,7 @@ public class SaveImageRunnable implements Runnable {
             bitmapToSave.copyPixelsFromBuffer(buffer);
 
             Bitmap rotatedBitmap = Bitmap.createBitmap(bitmapToSave, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, false);
-            rotatedBitmap.compress(Bitmap.CompressFormat.PNG, 90, bufferedOutputStream);
+            rotatedBitmap.compress(Bitmap.CompressFormat.PNG, 70, bufferedOutputStream);
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
