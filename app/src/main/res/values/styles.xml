@@ -11,6 +11,6 @@
 
     <style name="PopMenu" parent="Widget.AppCompat.PopupMenu">
         <item name="android:popupBackground">@color/blackTransparent</item>
-        <item name="android:dropDownVerticalOffset">20dip</item>
+        <item name="android:dropDownVerticalOffset">15dip</item>
     </style>
 </resources>

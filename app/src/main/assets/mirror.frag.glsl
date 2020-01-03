@@ -15,6 +15,7 @@ uniform float hue;
 uniform float dispX;
 uniform float dispY;
 
+
 vec3 hueShift(vec3 color, float hueAdjust){
     //implemented by mairod
 
@@ -46,15 +47,32 @@ vec3 hueShift(vec3 color, float hueAdjust){
 }
 
 void main() {
-    vec4 pix = texture2D(camTexture, v_CamTexCoordinate);
+
+    // Mirror
+    float isAfterHalfWidth = step(0.5, v_CamTexCoordinate.x);
+    float isAfterHalfHeight = step(v_CamTexCoordinate.y, 0.5);
+
+    float subX = ((v_CamTexCoordinate.x - 0.5) * 2.) * isAfterHalfWidth;
+    float subY = (1. - v_CamTexCoordinate.y) * isAfterHalfHeight;
+
+    vec2 mirroredPixelCoords = vec2(v_CamTexCoordinate.x - subX, v_CamTexCoordinate.y);
+
+    // Displacement
     float scaledDispX = (dispX * 0.1) - 0.05;
     float scaledDispY = (dispY * 0.1)- 0.05;
-    vec2 feedbackCoord = vec2(-v_CamTexCoordinate.y, -v_CamTexCoordinate.x);
+
+    // Feedback
+    // vec2 feedbackCoord = vec2(-v_CamTexCoordinate.y, -v_CamTexCoordinate.x);
+    vec2 feedbackCoord = vec2(-mirroredPixelCoords.y, -mirroredPixelCoords.x);
+
+    vec4 pix = texture2D(camTexture, mirroredPixelCoords);
     vec4 feedback = texture2D(bufferTexture, feedbackCoord.xy - vec2(scaledDispX, scaledDispY));
+
     float newopacity = opacity * 0.15;
     float fValue = (pix.r *0.29+ pix.g*0.6 + pix.b*0.11);
     float l1 = abs(threshold) - 0.07;
     float l2 = l1 + 0.07;
+
     //float threshBW = (threshold * 2.0) - 1.0;
     float bw_sel = step(threshold, 0.0);
     fValue = smoothstep(max(l1,0.0), min(l2, 1.0), abs(bw_sel - fValue));

@@ -13,5 +13,13 @@
             android:id="@+id/hue"
             android:icon="@drawable/ic_camera_24px"
             android:title="Hue" />
+        <item
+            android:id="@+id/dispX"
+            android:icon="@drawable/ic_camera_24px"
+            android:title="X Displacement" />
+        <item
+            android:id="@+id/dispY"
+            android:icon="@drawable/ic_camera_24px"
+            android:title="Y Displacement" />
     </group>
 </menu>

@@ -20,8 +20,10 @@ import android.Manifest;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ListPopupWindow;
 import android.widget.PopupMenu;
 import android.widget.SeekBar;
 import android.widget.Toast;
@@ -111,6 +113,12 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
                 case R.id.hue:
                     paramSelector = 3;
                     break;
+                case R.id.dispX:
+                    paramSelector = 4;
+                    break;
+                case R.id.dispY:
+                    paramSelector = 5;
+                    break;
             }
             seekBar.setProgress(((ShaderRenderer) mVideoRenderer).getEffectAmount(paramSelector));
             return true;
@@ -196,6 +204,7 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
             savePicture = true;
         }
         if (v.getId() == R.id.btn_menu) {
+            Log.i("popup", "gravity" + popup.getGravity());
             popup.show();
         }
     }

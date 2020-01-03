@@ -14,7 +14,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import camera.CameraActivity;
-import worker.SaveImageRunnable;
+import saveimage.SaveImageRunnable;
 
 public class ShaderRenderer extends VideoRenderer {
 
@@ -22,20 +22,24 @@ public class ShaderRenderer extends VideoRenderer {
     private Context context;
     private ShaderRenderer.OnButtonPressedListener listener;
     private Bitmap bufferBitmap;
+    private ByteBuffer onDrawPixelBuffer;
+    private Bitmap tempBitmap;
 
     private int mBufferTexId = -1;
     private int frameCount = 0;
     private int paramSelector;
 
     private float threshold = 0.5f;
-    private float opacity = 0.5f;
+    private float opacity = 0.0f;
     private float hue = 0.5f;
+    private float dispX = 0.0f;
+    private float dispY = 0.0f;
     private float effectAmount = 0;
     private boolean updateIsNeeded;
     private boolean firstFrame = true;
 
     public ShaderRenderer(Context context, ShaderRenderer.OnButtonPressedListener listener) {
-        super(context, "lumakey.frag.glsl", "lumakey.vert.glsl");
+        super(context, "mirror.frag.glsl", "lumakey.vert.glsl");
         this.context = context;
         this.listener = listener;
     }
@@ -66,6 +70,16 @@ public class ShaderRenderer extends VideoRenderer {
                 paramLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "hue");
                 GLES20.glUniform1f(paramLoc, hue);
                 break;
+            case 4:
+                dispX = effectAmount;
+                paramLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "dispX");
+                GLES20.glUniform1f(paramLoc, dispX);
+                break;
+            case 5:
+                dispY = effectAmount;
+                paramLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "dispY");
+                GLES20.glUniform1f(paramLoc, dispY);
+                break;
             default:
                 threshold = effectAmount;
                 int loc = GLES20.glGetUniformLocation(mCameraShaderProgram, "threshold");
@@ -89,6 +103,12 @@ public class ShaderRenderer extends VideoRenderer {
             case 3:
                 seekbarAmount = (int) (hue * 100);
                 break;
+            case 4:
+                seekbarAmount = (int) (dispX * 100);
+                break;
+            case 5:
+                seekbarAmount = (int) (dispY * 100);
+                break;
         }
         return seekbarAmount;
     }
@@ -101,12 +121,11 @@ public class ShaderRenderer extends VideoRenderer {
             ((CameraActivity) context).setSavePicture(false);
             saveImage();
         }
-        ByteBuffer onDrawPixelBuffer = ByteBuffer.allocateDirect(mSurfaceWidth * mSurfaceHeight * 4);
         onDrawPixelBuffer.rewind();
         GLES20.glReadPixels(0, 0, this.mSurfaceWidth, this.mSurfaceHeight, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE,
                 onDrawPixelBuffer);
 
-        Bitmap tempBitmap = Bitmap.createBitmap(this.mSurfaceWidth, this.mSurfaceHeight, Bitmap.Config.ARGB_8888);
+        tempBitmap = Bitmap.createBitmap(this.mSurfaceWidth, this.mSurfaceHeight, Bitmap.Config.ARGB_8888);
         tempBitmap.copyPixelsFromBuffer(onDrawPixelBuffer);
         updateBufferTexture(tempBitmap);
     }
@@ -144,8 +163,10 @@ public class ShaderRenderer extends VideoRenderer {
     }
 
     private void onFirstFrame() {
-        if (firstFrame == true) {
+        if (firstFrame) {
             bufferBitmap = Bitmap.createBitmap(mSurfaceWidth, mSurfaceHeight, Bitmap.Config.ARGB_8888);
+            onDrawPixelBuffer = ByteBuffer.allocateDirect(mSurfaceWidth * mSurfaceHeight * 4);
+
             if (mBufferTexId == -1) {
                 mBufferTexId = addTexture(bufferBitmap, "bufferTexture");
             }
