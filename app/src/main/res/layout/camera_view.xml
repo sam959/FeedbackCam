@@ -1,9 +1,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context="camera.CameraActivity">
+    tools:context="camera.CameraActivity"
+    android:focusable="true">
 
     <!--<com.androidexperiments.shadercam.view.SquareTextureView-->
 
@@ -18,89 +19,134 @@
         layout="@layout/app_bar_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="invisible"/>
+        android:visibility="invisible" />
+    <include
+        layout="@layout/custom_menu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/guide_under_menu"
+        app:layout_constraintBottom_toBottomOf="@id/guide_above_slider"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btn_menu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_menu_open_24px"
-        app:maxImageSize="40dp"
-        app:layout_constraintTop_toBottomOf="@id/guide_under_swap"
+        android:focusable="true"
+        app:layout_constraintBottom_toTopOf="@id/guide_under_menu"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/guide_start_swap"
-        app:layout_constraintBottom_toTopOf="@id/slider_container"/>
+        app:layout_constraintTop_toBottomOf="@id/guide_under_swap"
+        app:maxImageSize="40dp"
+        app:rippleColor="@color/purple" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/toggle_mirror"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/mirror_icon"
+        android:focusable="true"
+        app:layout_constraintBottom_toTopOf="@id/guide_under_mirror"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/guide_start_swap"
+        app:layout_constraintTop_toBottomOf="@id/guide_under_menu"
+        app:maxImageSize="50dp"
+        app:rippleColor="@color/purple" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guide_above_slider"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintGuide_percent="0.6"
-        android:orientation="horizontal" />
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.6" />
+
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guide_start_swap"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintGuide_percent="0.85"
-        android:orientation="vertical" />
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.85" />
+
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guide_under_swap"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintGuide_percent="0.10"
-        android:orientation="horizontal" />
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.10" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guide_under_menu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.2" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guide_under_mirror"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.3" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btn_take_picture"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_camera_24px"
-        app:rippleColor="@color/purple"
-        app:maxImageSize="40dp"
         android:layout_marginBottom="50dp"
-        app:layout_constraintTop_toBottomOf="@id/slider_container"
+        android:src="@drawable/ic_camera_24px"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/slider_container"
+        app:maxImageSize="40dp"
+        app:rippleColor="@color/purple" />
 
     <ImageView
         android:id="@+id/btn_swap_camera"
-        android:layout_width="57dp"
-        android:layout_height="47dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_marginStart="10dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="10dp"
         android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:src="@drawable/ic_flip_camera_android_24px"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/guide_under_swap"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/guide_start_swap"
-        app:layout_constraintBottom_toBottomOf="@id/guide_under_swap"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/slider_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/guide_above_slider"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
-    <androidx.appcompat.widget.AppCompatSeekBar
-        android:id="@+id/slider"
-        android:layout_width="350dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/cat_slider_left_margin"
-        android:valueFrom="0"
-        android:valueTo="11"
-        android:thumbOffset="1dp"
-        android:thumb="@drawable/ic_swap_horizontal_circle_24px"
-        android:thumbTint="@color/colorAccent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/guide_above_slider">
 
+        <androidx.appcompat.widget.AppCompatSeekBar
+            android:id="@+id/slider"
+            android:layout_width="350dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/cat_slider_left_margin"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:thumb="@drawable/ic_swap_horizontal_circle_24px"
+            android:thumbOffset="1dp"
+            android:thumbTint="@color/colorAccent"
+            android:valueFrom="0"
+            android:valueTo="11"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -21,5 +21,17 @@
             android:id="@+id/dispY"
             android:icon="@drawable/ic_camera_24px"
             android:title="Y Displacement" />
+        <item
+            android:id="@+id/contrast"
+            android:icon="@drawable/ic_camera_24px"
+            android:title="Contrast" />
+        <item
+            android:id="@+id/saturation"
+            android:icon="@drawable/ic_camera_24px"
+            android:title="Saturation" />
+        <item
+            android:id="@+id/brightness"
+            android:icon="@drawable/ic_camera_24px"
+            android:title="Brightness" />
     </group>
 </menu>

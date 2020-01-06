@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/custom_menu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:visibility="invisible">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_menu"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:backgroundTint="@color/blackTransparent"
+            app:cardCornerRadius="5dp"
+            app:cardElevation="5dp"
+            app:layout_constraintBottom_toBottomOf="@id/zoom"
+            app:layout_constraintEnd_toEndOf="@id/threshold"
+            app:layout_constraintStart_toStartOf="@id/threshold"
+            app:layout_constraintTop_toTopOf="@id/threshold" />
+
+
+        <TextView
+            android:id="@+id/threshold"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:elevation="6dp"
+            android:padding="2dp"
+            android:text="Threshold"
+            android:textColor="@android:color/white"
+            android:textSize="24dp"
+            app:layout_constraintBottom_toTopOf="@id/contrast"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/contrast"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:elevation="6dp"
+            android:padding="2dp"
+            android:onClick="onClick"
+            android:text="Contrast"
+            android:textColor="@android:color/white"
+            android:textSize="24dp"
+            app:layout_constraintBottom_toTopOf="@id/hue"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/threshold" />
+
+        <TextView
+            android:id="@+id/hue"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:elevation="6dp"
+            android:padding="2dp"
+            android:text="Hue"
+            android:textColor="@android:color/white"
+            android:textSize="24dp"
+            app:layout_constraintBottom_toTopOf="@id/saturation"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/contrast" />
+
+        <TextView
+            android:id="@+id/saturation"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:padding="2dp"
+            android:elevation="6dp"
+            android:text="Saturation"
+            android:textColor="@android:color/white"
+            android:textSize="24dp"
+            app:layout_constraintBottom_toTopOf="@id/brightness"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/hue" />
+
+        <TextView
+            android:id="@+id/brightness"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:elevation="6dp"
+            android:padding="2dp"
+            android:text="Brightness"
+            android:textColor="@android:color/white"
+            android:textSize="24dp"
+            app:layout_constraintBottom_toTopOf="@id/opacity"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/saturation" />
+
+
+        <TextView
+            android:id="@+id/opacity"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:elevation="6dp"
+            android:padding="2dp"
+            android:text="Opacity"
+            android:textColor="@android:color/white"
+            android:textSize="24dp"
+            app:layout_constraintBottom_toTopOf="@id/dispX"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/brightness" />
+
+        <TextView
+            android:id="@+id/dispX"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:elevation="6dp"
+            android:maxLines="1"
+            android:padding="2dp"
+            android:text="Displacement X"
+            android:textColor="@android:color/white"
+            android:textSize="24dp"
+            app:layout_constraintBottom_toTopOf="@id/dispY"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/opacity" />
+
+        <TextView
+            android:id="@+id/dispY"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:elevation="6dp"
+            android:maxLines="1"
+            android:padding="2dp"
+            android:text="Displacement Y"
+            android:textColor="@android:color/white"
+            android:textSize="24dp"
+            app:layout_constraintBottom_toTopOf="@id/zoom"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dispY" />
+
+        <TextView
+            android:id="@+id/zoom"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:elevation="6dp"
+            android:maxLines="1"
+            android:padding="2dp"
+            android:text="Zoom"
+            android:textColor="@android:color/white"
+            android:textSize="24dp"
+            app:layout_constraintBottom_toBottomOf="@id/card_menu"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dispY" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</LinearLayout>
