@@ -20,12 +20,10 @@ import android.Manifest;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.ListPopupWindow;
-import android.widget.PopupMenu;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.fragment.app.FragmentActivity;
@@ -42,10 +40,13 @@ import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceV
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import renderer.ShaderRenderer;
 
-public class CameraActivity extends FragmentActivity implements PermissionsHelper.PermissionsListener, ShaderRenderer.OnButtonPressedListener, View.OnClickListener, SeekBar.OnSeekBarChangeListener {
+public class CameraActivity extends FragmentActivity implements PermissionsHelper.PermissionsListener,
+        ShaderRenderer.OnTakePicturePressedListener, View.OnClickListener,
+        SeekBar.OnSeekBarChangeListener {
 
     private static final String TAG = CameraActivity.class.getSimpleName();
     private static final String TAG_CAMERA_FRAGMENT = "tag_camera_frag";
@@ -55,24 +56,26 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
     private RecordableSurfaceView mRecordableSurfaceView;
     private FloatingActionButton takePictureBtn;
     private FloatingActionButton showMenuButton;
+    private FloatingActionButton toggleMirror;
     private ImageView swapButton;
+    private View menu;
     private SeekBar seekBar;
-    private PopupMenu popup;
     private VideoFragment mVideoFragment;
     private PermissionsHelper mPermissionsHelper;
     private boolean mPermissionsSatisfied;
+    private boolean isMenuHidden = false;
     private File mOutputFile;
-    private int paramSelector;
+    private int selectedEffect;
 
-    public int getParamSelector() {
-        return paramSelector;
+    public int getSelectedEffect() {
+        return selectedEffect;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.camera_view);
-        mVideoRenderer = new ShaderRenderer(this, this);
+        mVideoRenderer = new ShaderRenderer(this);
         setUpUIComponents();
         if (PermissionsHelper.isMorHigher())
             setupPermissions();
@@ -92,37 +95,39 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
         showMenuButton = findViewById(R.id.btn_menu);
         swapButton = findViewById(R.id.btn_swap_camera);
         seekBar = findViewById(R.id.slider);
+        toggleMirror = findViewById(R.id.toggle_mirror);
         swapButton.setOnClickListener(this);
         takePictureBtn.setOnClickListener(this);
         showMenuButton.setOnClickListener(this);
         seekBar.setOnSeekBarChangeListener(this);
-        createPopupMenu();
+        toggleMirror.setOnClickListener(this);
+        seekBar.setProgress(((ShaderRenderer) mVideoRenderer).fromEffect(1));
+
+        setUpMenu();
     }
 
-    private void createPopupMenu() {
-        popup = new PopupMenu(this, showMenuButton);
-        popup.getMenuInflater().inflate(R.menu.activity_main_drawer, popup.getMenu());
-        popup.setOnMenuItemClickListener(item -> {
-            switch (item.getItemId()) {
-                case R.id.threshold:
-                    paramSelector = 1;
-                    break;
-                case R.id.opacity:
-                    paramSelector = 2;
-                    break;
-                case R.id.hue:
-                    paramSelector = 3;
-                    break;
-                case R.id.dispX:
-                    paramSelector = 4;
-                    break;
-                case R.id.dispY:
-                    paramSelector = 5;
-                    break;
-            }
-            seekBar.setProgress(((ShaderRenderer) mVideoRenderer).getEffectAmount(paramSelector));
-            return true;
-        });
+    private void setUpMenu() {
+        menu = findViewById(R.id.custom_menu);
+
+        TextView threshold = findViewById(R.id.threshold);
+        TextView hue = findViewById(R.id.hue);
+        TextView opacity = findViewById(R.id.opacity);
+        TextView dispX = findViewById(R.id.dispX);
+        TextView dispY = findViewById(R.id.dispY);
+        TextView contrast = findViewById(R.id.contrast);
+        TextView saturation = findViewById(R.id.saturation);
+        TextView brightness = findViewById(R.id.brightness);
+        TextView zoom = findViewById(R.id.zoom);
+
+        threshold.setOnClickListener(this);
+        hue.setOnClickListener(this);
+        opacity.setOnClickListener(this);
+        dispX.setOnClickListener(this);
+        dispY.setOnClickListener(this);
+        contrast.setOnClickListener(this);
+        saturation.setOnClickListener(this);
+        brightness.setOnClickListener(this);
+        zoom.setOnClickListener(this);
     }
 
     private void setupPermissions() {
@@ -195,22 +200,90 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
         this.finish();
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v.getId() == R.id.btn_swap_camera) {
-            mVideoFragment.swapCamera();
+    private void showMenu() {
+        if (isMenuHidden) {
+            menu.setVisibility(View.VISIBLE);
+        } else {
+            menu.setVisibility(View.INVISIBLE);
         }
-        if (v.getId() == R.id.btn_take_picture) {
-            savePicture = true;
-        }
-        if (v.getId() == R.id.btn_menu) {
-            Log.i("popup", "gravity" + popup.getGravity());
-            popup.show();
-        }
+        isMenuHidden = !isMenuHidden;
     }
 
     @Override
-    public boolean onButtonPressed() {
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.btn_swap_camera:
+                mVideoFragment.swapCamera();
+                break;
+            case R.id.btn_take_picture:
+                savePicture = true;
+                break;
+            case R.id.btn_menu:
+                showMenu();
+                break;
+            case R.id.threshold:
+                selectedEffect = 1;
+                seekBar.setProgress(((ShaderRenderer) mVideoRenderer).fromEffect(selectedEffect));
+                delayMenuClosing();
+                break;
+            case R.id.opacity:
+                selectedEffect = 2;
+                seekBar.setProgress(((ShaderRenderer) mVideoRenderer).fromEffect(selectedEffect));
+                delayMenuClosing();
+                break;
+            case R.id.hue:
+                selectedEffect = 3;
+                seekBar.setProgress(((ShaderRenderer) mVideoRenderer).fromEffect(selectedEffect));
+                delayMenuClosing();
+                break;
+            case R.id.dispX:
+                selectedEffect = 4;
+                seekBar.setProgress(((ShaderRenderer) mVideoRenderer).fromEffect(selectedEffect));
+                delayMenuClosing();
+                break;
+            case R.id.dispY:
+                selectedEffect = 5;
+                seekBar.setProgress(((ShaderRenderer) mVideoRenderer).fromEffect(selectedEffect));
+                delayMenuClosing();
+                break;
+            case R.id.contrast:
+                selectedEffect = 6;
+                seekBar.setProgress(((ShaderRenderer) mVideoRenderer).fromEffect(selectedEffect));
+                delayMenuClosing();
+                break;
+            case R.id.saturation:
+                selectedEffect = 7;
+                seekBar.setProgress(((ShaderRenderer) mVideoRenderer).fromEffect(selectedEffect));
+                delayMenuClosing();
+                break;
+            case R.id.brightness:
+                selectedEffect = 8;
+                seekBar.setProgress(((ShaderRenderer) mVideoRenderer).fromEffect(selectedEffect));
+                delayMenuClosing();
+                break;
+            case R.id.toggle_mirror:
+                ((ShaderRenderer) mVideoRenderer).toggleMirror();
+                break;
+            case R.id.zoom:
+                selectedEffect = 9;
+                ((ShaderRenderer) mVideoRenderer).fromEffect(selectedEffect);
+                delayMenuClosing();
+                break;
+        }
+    }
+
+    private void delayMenuClosing() {
+        try {
+            TimeUnit.MILLISECONDS.sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        menu.setVisibility(View.INVISIBLE);
+        isMenuHidden = true;
+    }
+
+    @Override
+    public boolean onTakePicturePressed() {
         return savePicture;
     }
 
@@ -221,7 +294,7 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
     // SEEKBAR
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        ((ShaderRenderer) mVideoFragment.getVideoRenderer()).getSeekbarProgressValue(seekBar.getProgress());
+        ((ShaderRenderer) mVideoRenderer).setEffectAmount(seekBar.getProgress());
     }
 
     @Override

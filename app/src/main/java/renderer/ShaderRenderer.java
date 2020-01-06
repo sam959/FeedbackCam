@@ -20,13 +20,13 @@ public class ShaderRenderer extends VideoRenderer {
 
     private static final File FILES_DIR = Environment.getExternalStorageDirectory();
     private Context context;
-    private ShaderRenderer.OnButtonPressedListener listener;
+    private OnTakePicturePressedListener onButtonPressedListener;
     private Bitmap bufferBitmap;
     private ByteBuffer onDrawPixelBuffer;
     private Bitmap tempBitmap;
 
     private int mBufferTexId = -1;
-    private int frameCount = 0;
+    private int photoNumber = 0;
     private int paramSelector;
 
     private float threshold = 0.5f;
@@ -34,26 +34,32 @@ public class ShaderRenderer extends VideoRenderer {
     private float hue = 0.5f;
     private float dispX = 0.0f;
     private float dispY = 0.0f;
+    private float contrast = 0.5f;
+    private float saturation = 0.5f;
+    private float brightness = 0.5f;
     private float effectAmount = 0;
+    private float zoom = 1.f;
+    private float isToggled;
+
     private boolean updateIsNeeded;
     private boolean firstFrame = true;
+    private boolean toggle = true;
 
-    public ShaderRenderer(Context context, ShaderRenderer.OnButtonPressedListener listener) {
+    public ShaderRenderer(Context context) {
         super(context, "mirror.frag.glsl", "lumakey.vert.glsl");
         this.context = context;
-        this.listener = listener;
-    }
-
-    @Override
-    public void onSurfaceChanged(int width, int height) {
-        super.onSurfaceChanged(width, height);
+        this.onButtonPressedListener = (OnTakePicturePressedListener) context;
     }
 
     @Override
     protected void setUniformsAndAttribs() {
         super.setUniformsAndAttribs();
+        if (firstFrame) {
+            effectAmount = 0.5f;
+
+        }
         int paramLoc;
-        paramSelector = ((CameraActivity) context).getParamSelector();
+        paramSelector = ((CameraActivity) context).getSelectedEffect();
         switch (paramSelector) {
             case 1:
                 threshold = effectAmount;
@@ -80,44 +86,88 @@ public class ShaderRenderer extends VideoRenderer {
                 paramLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "dispY");
                 GLES20.glUniform1f(paramLoc, dispY);
                 break;
+            case 6:
+                contrast = effectAmount;
+                paramLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "contrast");
+                GLES20.glUniform1f(paramLoc, contrast);
+                break;
+            case 7:
+                saturation = effectAmount;
+                paramLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "saturation");
+                GLES20.glUniform1f(paramLoc, saturation);
+                break;
+            case 8:
+                brightness = effectAmount;
+                paramLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "brightness");
+                GLES20.glUniform1f(paramLoc, brightness);
+                break;
+            case 9:
+                zoom = effectAmount;
+                int zoomLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "zoom");
+                GLES20.glUniform1f(zoomLoc, effectAmount);
+                break;
             default:
                 threshold = effectAmount;
-                int loc = GLES20.glGetUniformLocation(mCameraShaderProgram, "threshold");
-                GLES20.glUniform1f(loc, threshold);
+                int defloc = GLES20.glGetUniformLocation(mCameraShaderProgram, "threshold");
+                GLES20.glUniform1f(defloc, threshold);
         }
+        int mirrorLoc = GLES20.glGetUniformLocation(mCameraShaderProgram, "mirrorActive");
+        GLES20.glUniform1f(mirrorLoc, isToggled);
+        paramSelector = 0;
     }
 
-    public void getSeekbarProgressValue(int seekbarValue) {
-        effectAmount = ((float) seekbarValue) / 100;
+    public void setEffectAmount(int effectAmount) {
+        this.effectAmount = ((float) effectAmount) / 100;
     }
 
-    public int getEffectAmount(int effectNumber) {
-        int seekbarAmount = 0;
-        switch (effectNumber) {
+    public void toggleMirror() {
+        if (toggle) {
+            isToggled = 1.f;
+        } else {
+            isToggled = 0.f;
+        }
+        toggle = !toggle;
+    }
+
+    public int fromEffect(int effect) {
+        int lastSetEffectAmount = 0;
+        switch (effect) {
             case 1:
-                seekbarAmount = (int) (threshold * 100);
+                lastSetEffectAmount = (int) (threshold * 100);
                 break;
             case 2:
-                seekbarAmount = (int) (opacity * 100);
+                lastSetEffectAmount = (int) (opacity * 100);
                 break;
             case 3:
-                seekbarAmount = (int) (hue * 100);
+                lastSetEffectAmount = (int) (hue * 100);
                 break;
             case 4:
-                seekbarAmount = (int) (dispX * 100);
+                lastSetEffectAmount = (int) (dispX * 100);
                 break;
             case 5:
-                seekbarAmount = (int) (dispY * 100);
+                lastSetEffectAmount = (int) (dispY * 100);
+                break;
+            case 6:
+                lastSetEffectAmount = (int) (contrast * 100);
+                break;
+            case 7:
+                lastSetEffectAmount = (int) (saturation * 100);
+                break;
+            case 8:
+                lastSetEffectAmount = (int) (brightness * 100);
+                break;
+            case 9:
+                lastSetEffectAmount = (int) (zoom * 100);
                 break;
         }
-        return seekbarAmount;
+        return lastSetEffectAmount;
     }
 
     @Override
     public void onDrawFrame() {
         super.onDrawFrame();
         onFirstFrame();
-        if (listener.onButtonPressed()) {
+        if (onButtonPressedListener.onTakePicturePressed()) {
             ((CameraActivity) context).setSavePicture(false);
             saveImage();
         }
@@ -128,16 +178,18 @@ public class ShaderRenderer extends VideoRenderer {
         tempBitmap = Bitmap.createBitmap(this.mSurfaceWidth, this.mSurfaceHeight, Bitmap.Config.ARGB_8888);
         tempBitmap.copyPixelsFromBuffer(onDrawPixelBuffer);
         updateBufferTexture(tempBitmap);
+
+
     }
 
     private void saveImage() {
-        File outputFile = new File(FILES_DIR, String.format(context.getString(R.string.image_title), frameCount));
+        File outputFile = new File(FILES_DIR, String.format(context.getString(R.string.image_title), photoNumber));
         ByteBuffer bufferToSave = ByteBuffer.allocateDirect(mSurfaceWidth * mSurfaceHeight * 4);
         bufferToSave.order(ByteOrder.LITTLE_ENDIAN);
         bufferToSave.rewind();
         GLES20.glReadPixels(0, 0, mSurfaceWidth, mSurfaceHeight, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE,
                 bufferToSave);
-        frameCount++;
+        photoNumber++;
         new Thread(new SaveImageRunnable(bufferToSave, outputFile.toString(), mSurfaceWidth, mSurfaceHeight))
                 .start();
         Log.v("Picture ", "Saved " + this.mSurfaceWidth + "x" + this.mSurfaceHeight + " frame as '" + outputFile.toString() + "'" + "DIRECTORY IS: " + FILES_DIR);
@@ -180,8 +232,8 @@ public class ShaderRenderer extends VideoRenderer {
         super.deinitGLComponents();
     }
 
-    public interface OnButtonPressedListener {
-        boolean onButtonPressed();
+    public interface OnTakePicturePressedListener {
+        boolean onTakePicturePressed();
     }
 
 }
