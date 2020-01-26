@@ -6,7 +6,6 @@ import android.opengl.GLES20;
 import android.os.Environment;
 import android.util.Log;
 
-import com.androidexperiments.shadercam.gl.VideoRenderer;
 import com.example.feedbackcam.R;
 
 import java.io.File;
@@ -16,7 +15,7 @@ import java.nio.ByteOrder;
 import camera.CameraActivity;
 import saveimage.SaveImageRunnable;
 
-public class ShaderRenderer extends VideoRenderer {
+public class ShaderRenderer extends FlexibleVideoRenderer {
 
     private static final File FILES_DIR = Environment.getExternalStorageDirectory();
     private Context context;
@@ -129,7 +128,7 @@ public class ShaderRenderer extends VideoRenderer {
         toggle = !toggle;
     }
 
-    public int fromEffect(int effect) {
+    public int fromEffectAmount(int effect) {
         int lastSetEffectAmount = 0;
         switch (effect) {
             case 1:
